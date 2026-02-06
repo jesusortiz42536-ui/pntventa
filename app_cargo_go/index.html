@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Cargo-GO • Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Opcional: fuente Nunito/Inter si la usas -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Ajustes mínimos por si no están en styles.css */
+    body.blue-bg { min-height: 100vh; background: linear-gradient(180deg, #EAF4FF 0%, #D6EBFF 100%); }
+    .phone-shell { width: 100%; max-width: 430px; margin: 0 auto; padding: 16px 16px 100px; box-sizing: border-box; }
+    .logo-header { text-align: center; margin: 12px 0 8px; }
+    .logo { height: 56px; }
+    .subtitle { color: #527197; font-weight: 600; margin-top: 6px; }
+    .search-pill { display: flex; align-items: center; gap: 10px; background: #FFFFFFCC; border-radius: 22px; padding: 10px 14px; box-shadow: 0 8px 24px rgba(0,61,122,.15); }
+    .search-pill input { flex: 1; border: 0; outline: 0; background: transparent; color: #003D7A; }
+    .grid-btn { background: #EAF4FF; border: 0; border-radius: 14px; padding: 6px 8px; color: #7FA6C9; cursor: pointer; }
+
+    .activity-card {
+      margin-top: 14px; border-radius: 18px; padding: 14px; color: #fff;
+      background: linear-gradient(135deg, #1C6ED1 0%, #0E4D93 100%);
+      box-shadow: 0 16px 40px rgba(0,61,122,.30); position: relative;
+    }
+    .activity-card::before, .activity-card::after {
+      content: ""; position: absolute; left: 12px; right: 12px; height: 2px; border-radius: 2px;
+      background: linear-gradient(90deg, #FFB800 0%, #FFE69C 100%);
+    }
+    .activity-card::before { top: 10px; opacity: .85; }
+    .activity-card::after  { bottom: 10px; opacity: .45; }
+
+    .card-white { background: #FFFFFFE6; border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(0,61,122,.12), inset 0 1px 0 rgba(255,255,255,.8);
+      padding: 12px 14px; color: #104089;
+    }
+    .btn-pill-primary {
+      background: linear-gradient(180deg, #FFA726 0%, #FF8F00 100%); color: #fff; border: 0;
+      border-radius: 22px; padding: 10px 16px; font-weight: 800; cursor: pointer;
+      box-shadow: 0 10px 20px rgba(255,143,0,.35);
+    }
+
+    /* Usa tus clases blue-* ya agregadas en styles.css */
+  </style>
+</head>
+<body class="blue-bg">
+  <div class="phone-shell">
+
+    <!-- Header logo + slogan -->
+    <header class="logo-header">
+      <img src="assets/logo_horizontal_800x267.png" alt="Cargo-GO" class="logo">
+      <p class="subtitle">Movemos la ciudad por ti</p>
+    </header>
+
+    <!-- Barra de búsqueda pill -->
+    <div class="search-pill">
+      <span aria-hidden="true">🔍</span>
+      <input type="text" placeholder="Buscar envío, negocio..." aria-label="Buscar">
+      <button class="grid-btn" aria-label="Acciones">▦</button>
+    </div>
+
+    <!-- Tarjeta actividad -->
+    <section class="activity-card" aria-label="Tu actividad hoy">
+      <div style="display:flex; align-items:center;">
+        <strong>Tu actividad hoy</strong>
+        <div style="margin-left:auto;"><a href="#" style="color:#B9D4FF; text-decoration:none; font-weight:700" onclick="App.navigate('actividad'); return false;">Ver todo →</a></div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <!-- Bloques amarillos simulados -->
+        <div aria-hidden="true" style="display:flex; gap:6px; align-items:center;">
+          <!-- 12 bloques, 9 llenos -->
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#FFC107; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#E0E6EF; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#E0E6EF; border-radius:3px;"></span>
+          <span style="display:inline-block; width:14px; height:10px; background:#E0E6EF; border-radius:3px;"></span>
+          <strong style="margin-left:auto;">75%</strong>
+        </div>
+      </div>
+
+      <div style="margin-top:8px; display:flex; align-items:center;">
+        <span>CGO-002 → Pachuca</span>
+        <span style="margin-left:auto; color:#B9D4FF;">15:30</span>
+      </div>
+
+      <div style="margin-top:8px; display:flex; align-items:center;">
+        <span style="display:inline-flex; align-items:center; gap:8px;">
+          <span style="display:inline-block; width:24px; height:24px; background:#98B9E8; border-radius:50%;"></span>
+          En ruta ahora
+        </span>
+        <span style="margin-left:auto;"><a href="#" style="color:#B9D4FF; text-decoration:none; font-weight:700" onclick="App.navigate('actividad'); return false;">Ver todo →</a></span>
+      </div>
+    </section>
+
+    <!-- Nuevo envío CTA -->
+    <div class="card-white" style="display:flex; align-items:center; gap:12px; margin-top:14px;">
+      <span style="color:#FF9800; font-size:22px;" aria-hidden="true">⚡</span>
+      <div style="flex:1">
+        <div style="font-weight:800; color:#104089;">Nuevo envío</div>
+        <div style="color:#527197;">Rápido y fácil</div>
+      </div>
+      <button class="btn-pill-primary" onclick="App.navigate('nuevo-envio')">USAR AHORA →</button>
+    </div>
+
+    <!-- Quick actions 4 -->
+    <div style="display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-top:12px;">
+      <div class="card-white" style="text-align:center; padding:14px;" onclick="App.navigate('repetir')"><img alt="" src="assets/icons/repetir.svg" style="height:28px;"><div style="margin-top:6px; font-weight:700;">Repetir</div></div>
+      <div class="card-white" style="text-align:center; padding:14px;" onclick="App.navigate('cotizar')"><img alt="" src="assets/icons/cotizar.svg" style="height:28px;"><div style="margin-top:6px; font-weight:700;">Cotizar</div></div>
+      <div class="card-white" style="text-align:center; padding:14px;" onclick="App.navigate('soporte')"><img alt="" src="assets/icons/soporte.svg" style="height:28px;"><div style="margin-top:6px; font-weight:700;">Soporte</div></div>
+      <div class="card-white" style="text-align:center; padding:14px;" onclick="App.navigate('cupon')"><img alt="" src="assets/icons/cupon.svg" style="height:28px;"><div style="margin-top:6px; font-weight:700;">Cupón</div></div>
+    </div>
+
+    <!-- Historial reciente + oferta + grid 2x2 + sugerencia/invita + servicios -->
+    <div class="blue-section">
+      <div class="section-header-blue">
+        <h3>Historial reciente</h3>
+        <div class="section-actions">
+          <button class="filter-btn-blue">Filtros ▼</button>
+          <a href="#" onclick="App.navigate('historial'); return false;">Ver más →</a>
+        </div>
+      </div>
+
+      <!-- Oferta -->
+      <div class="blue-promo-card">
+        <span class="promo-icon" aria-hidden="true">🎁</span>
+        <div class="promo-text">
+          <strong>OFERTA: <span style="color:#FFB800;">20% OFF</span></strong> en tu próximo envío<br>
+          <small>Código: PROMO20</small>
+        </div>
+        <button class="promo-btn-blue" onclick="App.navigate('cupon')">USAR AHORA →</button>
+      </div>
+
+      <!-- Grid 2x2 historial/servicios -->
+      <div class="blue-grid-2x2">
+        <div class="blue-card-item" onclick="App.navigate('rastrear')">
+          <div class="card-icon-blue" aria-hidden="true">🚚</div>
+          <div class="card-info-blue">
+            <h4>Rastrea tu Envío</h4>
+            <p>López - 6700</p>
+            <span class="card-time">02:32:13</span>
+          </div>
+        </div>
+
+        <div class="blue-card-item" onclick="App.navigate('marketplace')">
+          <div class="card-icon-blue" aria-hidden="true">🏪</div>
+          <div class="card-info-blue">
+            <h4>Negocios Locales</h4>
+            <p>Pérez - $500</p>
+            <span class="card-time">11:20:45</span>
+          </div>
+        </div>
+
+        <div class="blue-card-item" onclick="App.navigate('historial')">
+          <div class="card-icon-blue" aria-hidden="true">🚐</div>
+          <div class="card-info-blue">
+            <h4>CGO-001 $320</h4>
+            <p>García - 4200</p>
+            <span class="card-time">Ayer 13:30</span>
+          </div>
+        </div>
+
+        <div class="blue-card-item">
+          <div class="card-icon-blue" aria-hidden="true">👥</div>
+          <div class="card-info-blue">
+            <h4>García - 4200</h4>
+            <p>Amer - 13:30</p>
+            <span class="card-time">Ayer 18:40</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid 2x2 Sugerencia + Invita -->
+      <div class="blue-grid-2x2" style="margin-top: 12px;">
+        <div class="blue-card-item">
+          <div class="card-icon-blue" aria-hidden="true">💡</div>
+          <div class="card-info-blue">
+            <h4>Sugerencia</h4>
+            <p style="font-size:11px; line-height:1.4;">Enviaste 3 paquetes a Pachuca este mes<br>¿Programar envíos recurrentes?</p>
+          </div>
+        </div>
+
+        <div class="blue-card-item" onclick="App.compartirReferido()">
+          <div class="card-icon-blue" aria-hidden="true">👥</div>
+          <div class="card-info-blue">
+            <h4>Invita y gana $50</h4>
+            <p><span style="color:#FFB800;">$50</span> para ti, $50 para tu amigo</p>
+            <button class="compartir-btn-inline" style="background:#4A9FE8; border:none; border-radius:12px; padding:6px 12px; color:white; font-size:11px; font-weight:700; margin-top:6px; cursor:pointer;">COMPARTIR →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Servicios Bottom -->
+    <div class="blue-services-bottom" style="margin-top: 20px;">
+      <div class="service-bottom-card" onclick="App.navigate('nuevo-envio')">
+        <div class="service-bottom-icon" aria-hidden="true">🚚</div>
+        <h4>Mini Mudanzas</h4>
+      </div>
+      <div class="service-bottom-card" onclick="App.navigate('marketplace')">
+        <div class="service-bottom-icon" aria-hidden="true">🏙️</div>
+        <h4>Negocios CDMX</h4>
+      </div>
+    </div>
+
+    <!-- Espaciado bottom nav -->
+    <div style="height: 100px;"></div>
+  </div>
+
+  <!-- Bottom nav (si lo necesitas tipo dock, puedes mantener el que ya tienes en index.html) -->
+  <nav class="bottom-dock" role="navigation" aria-label="Bottom navigation">
+    <!-- Ejemplo simple, reemplaza por tu glassmorphism premium si ya lo tienes -->
+    <button onclick="App.navigate('home')">Home</button>
+    <button onclick="App.navigate('envios')">Envíos</button>
+    <button onclick="App.navigate('rapido')">⚡</button>
+    <button onclick="App.navigate('paquetes')">Paquetes</button>
+    <button onclick="App.navigate('locales')">Locales</button>
+  </nav>
+
+  <script>
+    // Stubs por si App.* no está presente
+    window.App = window.App || {
+      navigate: function(route){ console.log('navigate:', route); },
+      compartirReferido: function(){ alert('Link de referido copiado'); }
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0D47A1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Farmacias Madrid - Repartidores</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #F5F7FA;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0D47A1, #1565C0);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .header h1 { font-size: 18px; font-weight: 700; }
+        .header .subtitle { font-size: 11px; opacity: 0.8; }
+        .header .status {
+            background: #00C853;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .header .status.offline {
+            background: #F44336;
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            padding: 15px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #0D47A1;
+        }
+        .stat-card .label {
+            font-size: 10px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        .stat-card.highlight .number { color: #00C853; }
+        .stat-card.warning .number { color: #FF9800; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid #E0E0E0;
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #999;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            text-transform: uppercase;
+        }
+        .tab.active {
+            color: #0D47A1;
+            border-bottom-color: #0D47A1;
+        }
+
+        /* Entregas List */
+        .entregas-list { padding: 10px 15px; }
+        .entrega-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #2196F3;
+            transition: transform 0.2s;
+        }
+        .entrega-card:active { transform: scale(0.98); }
+        .entrega-card.en-camino { border-left-color: #FF9800; }
+        .entrega-card.entregado { border-left-color: #4CAF50; opacity: 0.7; }
+        .entrega-card.cancelado { border-left-color: #F44336; opacity: 0.5; }
+
+        .entrega-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .entrega-id { font-weight: 800; color: #0D47A1; font-size: 14px; }
+        .entrega-estado {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .estado-pendiente { background: #E3F2FD; color: #1565C0; }
+        .estado-en-camino { background: #FFF3E0; color: #E65100; }
+        .estado-entregado { background: #E8F5E9; color: #2E7D32; }
+
+        .entrega-cliente {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .entrega-direccion {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .entrega-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .entrega-monto {
+            font-weight: 700;
+            color: #2E7D32;
+            font-size: 16px;
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.8; }
+        .btn-iniciar { background: #FF9800; color: white; }
+        .btn-completar { background: #4CAF50; color: white; }
+        .btn-llamar { background: #2196F3; color: white; }
+        .btn-mapa { background: #607D8B; color: white; }
+
+        /* Config */
+        .config-section { padding: 15px; }
+        .config-field {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .config-field label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .config-field input, .config-field select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .btn-guardar {
+            width: 100%;
+            padding: 14px;
+            background: #0D47A1;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Empty state */
+        .empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty .icon { font-size: 48px; margin-bottom: 10px; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+        .spinner {
+            width: 30px; height: 30px;
+            border: 3px solid #E0E0E0;
+            border-top-color: #0D47A1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .toast.show { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div>
+            <h1>Farmacias Madrid</h1>
+            <div class="subtitle">Panel de Repartidor</div>
+        </div>
+        <div class="status" id="statusBadge">EN LINEA</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="statsSection">
+        <div class="stat-card highlight">
+            <div class="number" id="statCompletadas">0</div>
+            <div class="label">Completadas</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="number" id="statPendientes">0</div>
+            <div class="label">Pendientes</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="statMonto">$0</div>
+            <div class="label">Cobrado</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" onclick="cambiarTab('pendientes')">Pendientes</div>
+        <div class="tab" onclick="cambiarTab('en-camino')">En Camino</div>
+        <div class="tab" onclick="cambiarTab('completadas')">Completadas</div>
+        <div class="tab" onclick="cambiarTab('config')">Config</div>
+    </div>
+
+    <!-- Content -->
+    <div id="content">
+        <div class="loading">
+            <div class="spinner"></div>
+            <div>Cargando entregas...</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // === CONFIGURACION ===
+        const CONFIG_KEY = 'fm_repartidor_config';
+        let config = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
+        let API_URL = config.apiUrl || 'http://localhost:5000';
+        let REPARTIDOR_ID = config.repartidorId || 1;
+        let currentTab = 'pendientes';
+        let entregas = [];
+
+        // === API ===
+        async function fetchAPI(endpoint, options = {}) {
+            try {
+                const res = await fetch(`${API_URL}${endpoint}`, {
+                    ...options,
+                    headers: { 'Content-Type': 'application/json', ...options.headers }
+                });
+                return await res.json();
+            } catch (e) {
+                console.error('API Error:', e);
+                updateOnlineStatus(false);
+                return null;
+            }
+        }
+
+        // === CARGAR ENTREGAS ===
+        async function cargarEntregas() {
+            const data = await fetchAPI(`/api/entregas?repartidor_id=${REPARTIDOR_ID}`);
+            if (data && data.ok) {
+                entregas = data.entregas;
+                updateOnlineStatus(true);
+                renderTab();
+            } else {
+                // Intentar cargar desde cache
+                const cached = localStorage.getItem('fm_entregas_cache');
+                if (cached) {
+                    entregas = JSON.parse(cached);
+                    renderTab();
+                }
+            }
+            // Guardar cache
+            localStorage.setItem('fm_entregas_cache', JSON.stringify(entregas));
+        }
+
+        // === CARGAR STATS ===
+        async function cargarStats() {
+            const data = await fetchAPI(`/api/stats/${REPARTIDOR_ID}`);
+            if (data && data.ok) {
+                document.getElementById('statCompletadas').textContent = data.stats.entregas_hoy;
+                document.getElementById('statPendientes').textContent = data.stats.pendientes;
+                document.getElementById('statMonto').textContent = `$${(data.stats.monto_cobrado_hoy || 0).toLocaleString()}`;
+            }
+        }
+
+        // === INICIAR ENTREGA ===
+        async function iniciarEntrega(id) {
+            if (!confirm('Iniciar entrega? Esto marcara la salida.')) return;
+            const data = await fetchAPI(`/api/entregas/${id}/iniciar`, { method: 'POST' });
+            if (data && data.ok) {
+                showToast('Entrega iniciada - En camino!');
+                cargarEntregas();
+                cargarStats();
+            } else {
+                showToast(data ? data.error : 'Error de conexion');
+            }
+        }
+
+        // === COMPLETAR ENTREGA ===
+        async function completarEntrega(id) {
+            const notas = prompt('Notas de entrega (opcional):') || '';
+            const data = await fetchAPI(`/api/entregas/${id}/completar`, {
+                method: 'POST',
+                body: JSON.stringify({ notas })
+            });
+            if (data && data.ok) {
+                showToast('Entrega completada!');
+                cargarEntregas();
+                cargarStats();
+            } else {
+                showToast(data ? data.error : 'Error de conexion');
+            }
+        }
+
+        // === LLAMAR CLIENTE ===
+        function llamarCliente(telefono) {
+            if (telefono) window.location.href = `tel:${telefono}`;
+        }
+
+        // === ABRIR MAPA ===
+        function abrirMapa(direccion) {
+            if (direccion) {
+                const encoded = encodeURIComponent(direccion + ', Tulancingo, Hidalgo');
+                window.open(`https://maps.google.com/maps?q=${encoded}`, '_blank');
+            }
+        }
+
+        // === RENDER ===
+        function renderTab() {
+            const content = document.getElementById('content');
+
+            if (currentTab === 'config') {
+                renderConfig(content);
+                return;
+            }
+
+            const estadoMap = {
+                'pendientes': ['PENDIENTE', 'ASIGNADO'],
+                'en-camino': ['EN CAMINO'],
+                'completadas': ['ENTREGADO']
+            };
+
+            const estados = estadoMap[currentTab] || ['PENDIENTE'];
+            const filtered = entregas.filter(e => estados.includes(e.estado));
+
+            if (filtered.length === 0) {
+                content.innerHTML = `
+                    <div class="empty">
+                        <div class="icon">${currentTab === 'completadas' ? '&#10004;' : '&#128666;'}</div>
+                        <div>No hay entregas ${currentTab}</div>
+                    </div>`;
+                return;
+            }
+
+            let html = '<div class="entregas-list">';
+            for (const e of filtered) {
+                const estadoClass = e.estado === 'EN CAMINO' ? 'en-camino' :
+                                   e.estado === 'ENTREGADO' ? 'entregado' : '';
+                const estadoBadge = e.estado === 'PENDIENTE' ? 'estado-pendiente' :
+                                   e.estado === 'EN CAMINO' ? 'estado-en-camino' : 'estado-entregado';
+
+                html += `
+                <div class="entrega-card ${estadoClass}">
+                    <div class="entrega-header">
+                        <span class="entrega-id">Entrega #${e.id}</span>
+                        <span class="entrega-estado ${estadoBadge}">${e.estado}</span>
+                    </div>
+                    <div class="entrega-cliente">${e.cliente_nombre || 'Cliente'}</div>
+                    <div class="entrega-direccion">${e.direccion || 'Sin direccion'}</div>
+                    ${e.referencia ? `<div class="entrega-direccion" style="color:#999">Ref: ${e.referencia}</div>` : ''}
+                    <div class="entrega-meta">
+                        <span>${e.metodo_pago || 'Sin metodo'}</span>
+                        <span class="entrega-monto">$${(e.monto_cobrar || 0).toLocaleString()}</span>
+                    </div>
+                    ${e.cambio_llevar > 0 ? `<div style="font-size:12px;color:#FF9800;margin-top:4px">Llevar cambio de: $${e.cambio_llevar}</div>` : ''}
+                    <div class="actions">
+                        ${e.estado === 'PENDIENTE' || e.estado === 'ASIGNADO' ?
+                            `<button class="btn btn-iniciar" onclick="iniciarEntrega(${e.id})">Iniciar</button>` : ''}
+                        ${e.estado === 'EN CAMINO' ?
+                            `<button class="btn btn-completar" onclick="completarEntrega(${e.id})">Entregar</button>` : ''}
+                        ${e.telefono_cliente ?
+                            `<button class="btn btn-llamar" onclick="llamarCliente('${e.telefono_cliente}')">Llamar</button>` : ''}
+                        ${e.direccion ?
+                            `<button class="btn btn-mapa" onclick="abrirMapa('${(e.direccion||'').replace(/'/g, "\\'")}')">Mapa</button>` : ''}
+                    </div>
+                </div>`;
+            }
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function renderConfig(content) {
+            content.innerHTML = `
+                <div class="config-section">
+                    <div class="config-field">
+                        <label>URL del Servidor API</label>
+                        <input type="url" id="cfgApiUrl" value="${API_URL}" placeholder="http://192.168.1.100:5000">
+                    </div>
+                    <div class="config-field">
+                        <label>ID del Repartidor</label>
+                        <input type="number" id="cfgRepartidorId" value="${REPARTIDOR_ID}" min="1">
+                    </div>
+                    <button class="btn-guardar" onclick="guardarConfig()">GUARDAR CONFIGURACION</button>
+                    <button class="btn-guardar" style="background:#4CAF50;margin-top:8px" onclick="cargarEntregas();cargarStats();cambiarTab('pendientes')">ACTUALIZAR DATOS</button>
+                    <div style="text-align:center;margin-top:20px;color:#999;font-size:12px">
+                        Farmacias Madrid v3.0<br>
+                        App Repartidores PWA
+                    </div>
+                </div>`;
+        }
+
+        function guardarConfig() {
+            const apiUrl = document.getElementById('cfgApiUrl').value.replace(/\/$/, '');
+            const repartidorId = parseInt(document.getElementById('cfgRepartidorId').value) || 1;
+            config = { apiUrl, repartidorId };
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+            API_URL = apiUrl;
+            REPARTIDOR_ID = repartidorId;
+            showToast('Configuracion guardada');
+            cargarEntregas();
+            cargarStats();
+        }
+
+        // === TABS ===
+        function cambiarTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTab();
+        }
+
+        // === UTILS ===
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function updateOnlineStatus(online) {
+            const badge = document.getElementById('statusBadge');
+            if (online) {
+                badge.textContent = 'EN LINEA';
+                badge.classList.remove('offline');
+            } else {
+                badge.textContent = 'SIN CONEXION';
+                badge.classList.add('offline');
+            }
+        }
+
+        // === INIT ===
+        window.addEventListener('online', () => { updateOnlineStatus(true); cargarEntregas(); });
+        window.addEventListener('offline', () => updateOnlineStatus(false));
+
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('SW registrado'))
+                .catch(e => console.log('SW error:', e));
+        }
+
+        // Auto-refresh cada 30 segundos
+        cargarEntregas();
+        cargarStats();
+        setInterval(() => { cargarEntregas(); cargarStats(); }, 30000);
+    </script>
+</body>
+</html>
