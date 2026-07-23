@@ -856,7 +856,7 @@ def abrir_sistema():
     
     root = tk.Toplevel()
     root.title("FARMACIAS MADRID - Sistema POS")
-    root.state('zoomed')
+    root.attributes('-fullscreen', True)
     root.configure(bg=GRIS_FONDO)
 
     # ================================================================
