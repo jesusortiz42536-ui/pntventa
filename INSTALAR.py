@@ -1,4 +1,5 @@
 import sqlite3
+import os
 from datetime import datetime
 import random
 
@@ -21,8 +22,27 @@ c.execute('''CREATE TABLE IF NOT EXISTS productos (
     aplica_iva INTEGER,
     stock INTEGER,
     lote TEXT,
-    caducidad TEXT
+    caducidad TEXT,
+    imagen TEXT,
+    precio_oferta REAL DEFAULT 0,
+    codigo_barras TEXT
 )''')
+
+# Imagenes reales disponibles en imagenes/productos (nombre_marca.png -> archivo existente)
+_img_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "imagenes", "productos")
+_imagenes_disponibles = set(os.listdir(_img_dir)) if os.path.exists(_img_dir) else set()
+
+_placeholder_categoria = {
+    "MEDICAMENTOS": "imagenes/productos/_cat_medicamento.png",
+    "HIGIENE": "imagenes/productos/_cat_abarrotes.png",
+}
+
+def imagen_para(nombre_comercial, categoria):
+    """Regresa la ruta relativa de imagen para una marca, o el placeholder de categoria."""
+    archivo = nombre_comercial.lower().replace("&", "").replace(" ", "") + ".png"
+    if archivo in _imagenes_disponibles:
+        return f"imagenes/productos/{archivo}"
+    return _placeholder_categoria.get(categoria, "imagenes/productos/_placeholder.png")
 
 c.execute('''CREATE TABLE IF NOT EXISTS clientes (
     id INTEGER PRIMARY KEY,
@@ -33,7 +53,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS clientes (
     colonia TEXT,
     puntos_lealtad INTEGER,
     direccion_completa TEXT,
-    referencia TEXT
+    referencia TEXT,
+    foto TEXT
 )''')
 
 c.execute('''CREATE TABLE IF NOT EXISTS empleados (
@@ -57,7 +78,8 @@ c.execute('''CREATE TABLE IF NOT EXISTS ventas (
     total REAL,
     tipo_pago TEXT,
     monto_efectivo REAL,
-    monto_tarjeta REAL
+    monto_tarjeta REAL,
+    es_domicilio INTEGER DEFAULT 0
 )''')
 
 c.execute('''CREATE TABLE IF NOT EXISTS detalle_ventas (
@@ -555,12 +577,15 @@ for i in range(40000):
     
     codigo = f"MED{i+1:06d}"
     precio = round(random.uniform(15, 500), 2)
+    img = imagen_para(nombre_comercial, "MEDICAMENTOS")
+    cbarras = f"750{i+1:010d}"
     
     productos.append((
         codigo, nombre, "MEDICAMENTOS", lab,
         precio * 0.6, precio, 1,
         random.randint(10, 200),
-        f"L{random.randint(1000,9999)}", "2026-12-31"
+        f"L{random.randint(1000,9999)}", "2026-12-31",
+        img, 0, cbarras
     ))
     
     if (i+1) % 5000 == 0:
@@ -585,18 +610,21 @@ for i in range(5000):
     nombre = f"{marca} {prod} {tam}"
     codigo = f"HIG{i+1:05d}"
     precio = round(random.uniform(20, 300), 2)
+    img = imagen_para(marca, "HIGIENE")
+    cbarras = f"751{i+1:010d}"
     
     productos.append((
         codigo, nombre, "HIGIENE", marca,
         precio * 0.65, precio, 1,
         random.randint(20, 150),
-        f"L{random.randint(1000,9999)}", "2026-12-31"
+        f"L{random.randint(1000,9999)}", "2026-12-31",
+        img, 0, cbarras
     ))
     
     if (i+1) % 1000 == 0:
         print(f"  Higiene: {i+1:,} / 5,000")
 
-c.executemany("INSERT INTO productos (codigo,nombre,categoria,laboratorio,precio_costo,precio_venta,aplica_iva,stock,lote,caducidad) VALUES (?,?,?,?,?,?,?,?,?,?)", productos)
+c.executemany("INSERT INTO productos (codigo,nombre,categoria,laboratorio,precio_costo,precio_venta,aplica_iva,stock,lote,caducidad,imagen,precio_oferta,codigo_barras) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", productos)
 
 print()
 print("Creando usuarios...")
@@ -605,9 +633,9 @@ c.execute("INSERT INTO empleados (id,nombre,usuario,password,nivel,activo,rol_id
 c.execute("INSERT INTO empleados (id,nombre,usuario,password,nivel,activo,rol_id) VALUES (3,'Juan Perez','jperez','pass123','VENDEDOR',1,3)")
 
 print("Creando clientes...")
-c.execute("INSERT INTO clientes VALUES (1,'PUBLICO GENERAL','','','','',0,'','')")
-c.execute("INSERT INTO clientes VALUES (2,'Juan Gomez','7751234567','juan@email.com','Calle Principal 123','Centro',0,'Calle Principal 123, Col. Centro','Frente al parque')")
-c.execute("INSERT INTO clientes VALUES (3,'Maria Lopez','7759876543','maria@email.com','Av Juarez 456','Norte',0,'Av Juarez 456, Col. Norte','A lado de la tienda azul')")
+c.execute("INSERT INTO clientes VALUES (1,'PUBLICO GENERAL','','','','',0,'','','')")
+c.execute("INSERT INTO clientes VALUES (2,'Juan Gomez','7751234567','juan@email.com','Calle Principal 123','Centro',0,'Calle Principal 123, Col. Centro','Frente al parque','')")
+c.execute("INSERT INTO clientes VALUES (3,'Maria Lopez','7759876543','maria@email.com','Av Juarez 456','Norte',0,'Av Juarez 456, Col. Norte','A lado de la tienda azul','')")
 
 print("Creando repartidores...")
 c.execute("INSERT INTO repartidores (id, nombre, telefono, num_moto, activo) VALUES (1,'Carlos Ramirez','7751111111','M-01',1)")

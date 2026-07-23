@@ -6,22 +6,7 @@ from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageColor
 import os
 import time
 import re
-try:
-    from whatsapp_service import WhatsAppService
-    _ws = WhatsAppService()
-except Exception as _e:
-    _ws = None
-    print(f"[WhatsApp] No se pudo cargar el servicio: {_e}")
-try:
-    import winsound  # Windows
-except ImportError:
-    class winsound:  # Shim para Linux/Mac: Beep no hace nada (ya esta dentro de try/except en el codigo)
-        @staticmethod
-        def Beep(freq, dur):
-            try:
-                print("\a", end="", flush=True)  # bell del terminal como sustituto
-            except Exception:
-                pass
+import winsound
 import tempfile
 
 # ===== CONSTANTES DE DISENO =====
@@ -380,101 +365,6 @@ def beep_error():
     try:
         winsound.Beep(400, 300)
     except: pass
-
-def abrir_registro_domicilio(main, cliente_id, cliente_nombre, venta_id, folio, total, tipo_pago):
-    """Captura/confirma direccion, referencia y foto del cliente para una entrega a domicilio,
-    guarda el registro en 'entregas' y notifica por WhatsApp si hay servicio configurado."""
-    c.execute("SELECT telefono, direccion_completa, referencia, foto FROM clientes WHERE id=?", (cliente_id,))
-    row = c.fetchone() or ("", "", "", "")
-    tel_actual, dir_actual, ref_actual, foto_actual = row
-
-    dlg = tk.Toplevel(main)
-    dlg.title(f"🏠 Entrega a domicilio - {cliente_nombre}")
-    dlg.geometry("420x420")
-    dlg.configure(bg="white")
-    dlg.transient(main)
-    dlg.grab_set()
-
-    tk.Label(dlg, text=f"Cliente: {cliente_nombre}", font=("Segoe UI", 11, "bold"), bg="white").pack(pady=(12, 6))
-
-    tk.Label(dlg, text="Teléfono:", font=("Segoe UI", 9, "bold"), bg="white").pack(anchor="w", padx=15)
-    tel_var = tk.StringVar(value=tel_actual or "")
-    tk.Entry(dlg, textvariable=tel_var, font=("Segoe UI", 10)).pack(fill=tk.X, padx=15, pady=(0, 8))
-
-    tk.Label(dlg, text="Dirección completa:", font=("Segoe UI", 9, "bold"), bg="white").pack(anchor="w", padx=15)
-    dir_var = tk.StringVar(value=dir_actual or "")
-    tk.Entry(dlg, textvariable=dir_var, font=("Segoe UI", 10)).pack(fill=tk.X, padx=15, pady=(0, 8))
-
-    tk.Label(dlg, text="Referencia (color de casa, entre calles, etc.):", font=("Segoe UI", 9, "bold"), bg="white").pack(anchor="w", padx=15)
-    ref_var = tk.StringVar(value=ref_actual or "")
-    tk.Entry(dlg, textvariable=ref_var, font=("Segoe UI", 10)).pack(fill=tk.X, padx=15, pady=(0, 8))
-
-    foto_path_var = tk.StringVar(value="")
-    foto_lbl = tk.Label(dlg, text="Sin foto nueva" + (" (ya tiene una guardada)" if foto_actual else ""),
-                        bg="#f0f0f0", relief=tk.SUNKEN, width=30, height=3)
-    foto_lbl.pack(pady=8)
-
-    def elegir_foto():
-        ruta = filedialog.askopenfilename(filetypes=[("Imagenes", "*.png *.jpg *.jpeg *.bmp")])
-        if ruta:
-            foto_path_var.set(ruta)
-            try:
-                prev = Image.open(ruta).resize((90, 90), Image.Resampling.LANCZOS)
-                tk_prev = ImageTk.PhotoImage(prev)
-                foto_lbl.config(image=tk_prev, text="", width=90, height=90)
-                foto_lbl._img_ref = tk_prev
-            except Exception:
-                foto_lbl.config(text="✓ Foto cargada")
-
-    tk.Button(dlg, text="📁 Cargar foto del cliente", command=elegir_foto,
-             bg="#2196F3", fg="white", font=("Segoe UI", 9, "bold"),
-             relief=tk.FLAT, padx=10, pady=6, cursor="hand2").pack(pady=4)
-
-    def confirmar():
-        telefono = tel_var.get().strip()
-        direccion = dir_var.get().strip()
-        referencia = ref_var.get().strip()
-        if not direccion:
-            messagebox.showwarning("Falta dirección", "Captura la dirección de entrega")
-            return
-
-        # Guardar foto si se eligio una nueva
-        ruta_foto_final = foto_actual or ""
-        if foto_path_var.get() and os.path.exists(foto_path_var.get()):
-            try:
-                dest_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "imagenes", "clientes")
-                os.makedirs(dest_dir, exist_ok=True)
-                dest = os.path.join(dest_dir, f"cliente_{cliente_id}.png")
-                Image.open(foto_path_var.get()).convert("RGB").save(dest, "PNG")
-                ruta_foto_final = f"imagenes/clientes/cliente_{cliente_id}.png"
-            except Exception:
-                pass
-
-        # Actualizar cliente
-        c.execute("""UPDATE clientes SET telefono=?, direccion_completa=?, referencia=?, foto=?
-                     WHERE id=?""", (telefono, direccion, referencia, ruta_foto_final, cliente_id))
-
-        # Registrar entrega
-        fecha = datetime.now().strftime('%Y-%m-%d')
-        c.execute("""INSERT INTO entregas (venta_id, cliente_id, direccion, referencia,
-                    telefono_cliente, estado, monto_cobrar, fecha)
-                    VALUES (?,?,?,?,?,?,?,?)""",
-                 (venta_id, cliente_id, direccion, referencia, telefono, "PENDIENTE", total, fecha))
-        conn.commit()
-
-        # Notificar por WhatsApp si hay servicio configurado
-        if _ws and telefono and len(telefono) >= 10:
-            try:
-                _ws.enviar_delivery(telefono, folio, "por asignar", "ASIGNADO")
-            except Exception:
-                pass
-
-        dlg.destroy()
-
-    tk.Button(dlg, text="✓ CONFIRMAR ENTREGA", command=confirmar,
-             bg="#00C853", fg="white", font=("Segoe UI", 10, "bold"),
-             relief=tk.FLAT, padx=15, pady=8, cursor="hand2").pack(pady=15)
-
 
 def es_codigo_barras(texto):
     """Detecta si el texto es un código de barras válido (EAN-13, UPC, interno)."""
@@ -3172,12 +3062,6 @@ def ver_ventas():
                   activebackground="#1A2332", activeforeground="#FFC107"
                   ).pack(anchor="w")
 
-    es_domicilio_var = tk.IntVar(value=0)
-    tk.Checkbutton(saldo_sat_frame, text="🏠 Entrega a domicilio", variable=es_domicilio_var,
-                  font=("Segoe UI", 7, "bold"), bg="#1A2332", fg="#00E5B0", selectcolor="#263238",
-                  activebackground="#1A2332", activeforeground="#00E5B0"
-                  ).pack(anchor="w")
-
     def actualizar_info_cliente(*args):
         """Muestra saldo Saturnos y crédito disponible del cliente seleccionado."""
         nombre_cl = cliente_var.get()
@@ -3489,10 +3373,10 @@ def ver_ventas():
         hora = datetime.now().strftime('%H:%M:%S')
 
         c.execute("""INSERT INTO ventas (folio, fecha, hora, vendedor_id, cliente_id,
-                    subtotal, iva, total, tipo_pago, monto_efectivo, monto_tarjeta, es_domicilio)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    subtotal, iva, total, tipo_pago, monto_efectivo, monto_tarjeta)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
                  (folio_actual, fecha, hora, usuario_id, cliente_id,
-                  total, 0, total, tipo_pago, efec, tarj, es_domicilio_var.get()))
+                  total, 0, total, tipo_pago, efec, tarj))
 
         venta_id = c.lastrowid
 
@@ -3578,24 +3462,6 @@ def ver_ventas():
         conn.commit()
 
         registrar_auditoria("VENTA", "ventas", f"Folio: {folio_actual}, Total: ${total:,.2f}, Pago: {tipo_pago}")
-
-        # --- WHATSAPP: ticket digital automatico (si el cliente tiene telefono registrado) ---
-        if _ws and cliente_id > 1:
-            try:
-                c.execute("SELECT telefono FROM clientes WHERE id=?", (cliente_id,))
-                tel_row = c.fetchone()
-                tel_cliente = tel_row[0] if tel_row else None
-                if tel_cliente and len(tel_cliente) >= 10:
-                    items_txt = "\n".join(f"{it[4]}x {it[1][:30]} ${it[5]:,.2f}" for it in carrito_items)
-                    _ws.enviar_ticket_digital(tel_cliente, folio_actual, total, items_txt,
-                                              obtener_sucursal().get("nombre", "FARMACIAS MADRID"))
-            except Exception:
-                pass
-
-        # --- ENTREGA A DOMICILIO: capturar direccion/foto y notificar ---
-        if es_domicilio_var.get() and cliente_id > 1:
-            abrir_registro_domicilio(main, cliente_id, cliente_var.get(), venta_id,
-                                     folio_actual, total, tipo_pago)
 
         # Pasar info de pago mixto al ticket
         pago_info = {"efectivo": efec, "tarjeta": tarj, "vale": val,
@@ -8276,23 +8142,18 @@ def ver_saturnos():
                  bg="#f44336", fg="white", font=("Segoe UI", 9, "bold"),
                  relief=tk.FLAT, padx=6, pady=4, cursor="hand2").pack(side=tk.LEFT, padx=2)
 
-        solo_virtual_var = tk.IntVar(value=0)
-        tk.Checkbutton(foto_frame, text="📲 Solo virtual (enviar por WhatsApp, no imprimir)",
-                      variable=solo_virtual_var, font=("Segoe UI", 8, "bold"),
-                      bg="white", fg="#00897B").pack(side=tk.LEFT, padx=8)
-
         # === BOTON GENERAR E IMPRIMIR (verde, al lado) ===
         def generar_e_imprimir():
-            """Genera la tarjeta y la imprime, o la envia por WhatsApp si es solo virtual"""
+            """Genera la tarjeta y la imprime directamente"""
             nombre = cli_var_t.get()
             if not nombre:
                 messagebox.showwarning("Aviso", "Selecciona un cliente")
                 return
-            c.execute("SELECT id, telefono FROM clientes WHERE nombre=?", (nombre,))
+            c.execute("SELECT id FROM clientes WHERE nombre=?", (nombre,))
             row = c.fetchone()
             if not row:
                 return
-            cid, tel_cliente = row
+            cid = row[0]
             nivel_sel = nivel_var.get()
 
             # Verificar tarjeta existente
@@ -8342,45 +8203,12 @@ def ver_saturnos():
                          (cid, codigo, nivel_sel, ahora.strftime('%Y-%m-%d %H:%M'), ahora.strftime('%Y-%m-%d')))
             conn.commit()
 
-            # Entregar: imprimir físico o enviar virtual por WhatsApp
-            if solo_virtual_var.get():
-                if not tel_cliente or len(tel_cliente) < 10:
-                    messagebox.showwarning("Sin teléfono",
-                        f"✓ Tarjeta {codigo} generada, pero el cliente no tiene teléfono registrado.\n"
-                        f"Guardada en:\n{ruta_f}\n\nAgrega su teléfono para poder enviarla por WhatsApp.")
-                elif not _ws:
-                    messagebox.showwarning("WhatsApp no configurado",
-                        f"✓ Tarjeta {codigo} generada en:\n{ruta_f}\n\n"
-                        f"El servicio de WhatsApp no está disponible ahora mismo.")
-                else:
-                    try:
-                        imagen_url = None
-                        try:
-                            from firebase_storage_helper import subir_imagen
-                            imagen_url = subir_imagen(ruta_f, f"tarjetas/{codigo}.png")
-                        except Exception:
-                            imagen_url = None
-
-                        enviado = _ws.enviar_tarjeta_virtual(tel_cliente, nombre, nivel_sel, codigo, imagen_url)
-
-                        if imagen_url:
-                            messagebox.showinfo("Tarjeta enviada",
-                                f"✓ Tarjeta {codigo} enviada por WhatsApp a {tel_cliente} CON IMAGEN.")
-                        elif enviado:
-                            messagebox.showinfo("Tarjeta enviada (solo texto)",
-                                f"✓ Código {codigo} enviado por WhatsApp a {tel_cliente}.\n\n"
-                                f"No se pudo subir la imagen (revisa firebase_credentials.json "
-                                f"en la carpeta del sistema). Por ahora solo se mandó el código.")
-                        else:
-                            messagebox.showwarning("No enviado", "No se pudo enviar el mensaje por WhatsApp.")
-                    except Exception as e:
-                        messagebox.showerror("Error", f"No se pudo enviar por WhatsApp: {e}")
-            else:
-                try:
-                    os.startfile(ruta_f, "print")
-                    messagebox.showinfo("Tarjeta Generada", f"✓ Tarjeta {codigo} generada e impresa\n\nNivel: {nivel_sel}\nCliente: {nombre}")
-                except Exception as e:
-                    messagebox.showinfo("Tarjeta Generada", f"✓ Tarjeta {codigo} generada\n\nGuardada en:\n{ruta_f}\n\n(No se pudo imprimir: {e})")
+            # Imprimir directamente
+            try:
+                os.startfile(ruta_f, "print")
+                messagebox.showinfo("Tarjeta Generada", f"✓ Tarjeta {codigo} generada e impresa\n\nNivel: {nivel_sel}\nCliente: {nombre}")
+            except Exception as e:
+                messagebox.showinfo("Tarjeta Generada", f"✓ Tarjeta {codigo} generada\n\nGuardada en:\n{ruta_f}\n\n(No se pudo imprimir: {e})")
 
             dlg.destroy()
 

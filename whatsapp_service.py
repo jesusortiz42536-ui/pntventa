@@ -75,24 +75,34 @@ class WhatsAppService:
         conn.commit()
         conn.close()
 
-    def _enviar(self, telefono, mensaje):
-        """Envia un mensaje WhatsApp via Twilio."""
+    def _enviar(self, telefono, mensaje, media_url=None):
+        """Envia un mensaje WhatsApp via Twilio. media_url (opcional) adjunta una imagen publica."""
         if not self.client:
             self._log_mensaje(telefono, "envio", mensaje, "NO_CONFIGURADO")
             return False
 
         try:
             to_number = f"whatsapp:+52{telefono}" if not telefono.startswith("whatsapp:") else telefono
-            msg = self.client.messages.create(
-                body=mensaje,
-                from_=TWILIO_WHATSAPP_FROM,
-                to=to_number
-            )
+            kwargs = dict(body=mensaje, from_=TWILIO_WHATSAPP_FROM, to=to_number)
+            if media_url:
+                kwargs["media_url"] = [media_url]
+            msg = self.client.messages.create(**kwargs)
             self._log_mensaje(telefono, "envio", mensaje, "ENVIADO", msg.sid)
             return True
         except Exception as e:
             self._log_mensaje(telefono, "envio", mensaje, f"ERROR: {str(e)}")
             return False
+
+    def enviar_tarjeta_virtual(self, telefono, nombre_cliente, nivel, codigo, imagen_url=None):
+        """Envia la tarjeta de lealtad recien emitida. Si imagen_url esta disponible (hosteada
+        publicamente, ej. Firebase Storage) se adjunta la imagen; si no, se envia solo el codigo."""
+        mensaje = (
+            f"FARMACIAS MADRID - Tu tarjeta {nivel} esta lista!\n"
+            f"Hola {nombre_cliente}, aqui esta tu tarjeta de lealtad.\n"
+            f"Codigo: {codigo}\n\n"
+            f"Presentala en cualquier sucursal para acumular Saturnos."
+        )
+        return self._enviar(telefono, mensaje, media_url=imagen_url)
 
     # === TEMPLATES DE MENSAJES ===
 
